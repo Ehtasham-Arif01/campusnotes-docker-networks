@@ -1,0 +1,97 @@
+# CampusNotes - multi-container app demonstrating Docker network isolation.
+#
+#   public_net  (172.20.0.0/24, bridge)          : frontend, admin, stats, api
+#   private_net (172.21.0.0/24, bridge, internal) : api, mongo
+#
+# The API is the ONLY service on both networks, so it is the single
+# gateway to MongoDB. Mongo publishes no ports and private_net is
+# `internal`, so the database has no route to the host or the internet.
+
+name: campusnotes
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: campus_frontend
+    ports:
+      - "8080:80"
+    networks:
+      - public_net
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  admin:
+    build: ./admin
+    container_name: campus_admin
+    ports:
+      - "8081:80"
+    networks:
+      - public_net
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  stats:
+    build: ./stats
+    container_name: campus_stats
+    environment:
+      - API_URL=http://api:3000
+    ports:
+      - "3001:3001"
+    networks:
+      - public_net
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    container_name: campus_api
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+    ports:
+      - "3000:3000"
+    networks:
+      - public_net
+      - private_net
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: campus_mongo
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - private_net
+    # No "ports:" on purpose - MongoDB is never exposed to the host.
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+networks:
+  public_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+  private_net:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+          gateway: 172.21.0.1
+
+volumes:
+  mongo_data:

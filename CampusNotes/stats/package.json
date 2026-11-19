@@ -1,0 +1,14 @@
+{
+  "name": "campusnotes-stats",
+  "description": "Stats microservice for CampusNotes - reads counts from the API over public_net",
+  "private": true,
+  "license": "MIT",
+  "version": "1.0.0",
+  "main": "server.js",
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}

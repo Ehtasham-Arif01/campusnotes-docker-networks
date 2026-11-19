@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CampusNotes Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 16px; background: #f4f6f8; color: #222; }
+    h1 { color: #922b21; }
+    table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #e5e5e5; vertical-align: top; }
+    th { background: #922b21; color: #fff; }
+    .badge { display: inline-block; background: #e8daef; padding: 2px 8px; border-radius: 10px; font-size: 12px; }
+    #info { margin: 10px 0; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>CampusNotes Admin <span class="badge">read-only</span></h1>
+  <div id="info">Loading...</div>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Title</th><th>Note</th><th>Created</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    const API = `http://${location.hostname}:3000`;
+
+    async function load() {
+      const info = document.getElementById('info');
+      const rows = document.getElementById('rows');
+      try {
+        const res = await fetch(`${API}/notes`);
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
+        const data = await res.json();
+        info.textContent = `Total notes: ${data.length} (auto-refresh every 5s)`;
+        rows.innerHTML = '';
+        if (data.length === 0) {
+          rows.innerHTML = '<tr><td colspan="4">No notes yet.</td></tr>';
+          return;
+        }
+        data.forEach((n, i) => {
+          const tr = document.createElement('tr');
+          [i + 1, n.title, n.text, new Date(n.createdAt).toLocaleString()].forEach(v => {
+            const td = document.createElement('td');
+            td.textContent = v;
+            tr.appendChild(td);
+          });
+          rows.appendChild(tr);
+        });
+      } catch (e) {
+        info.textContent = 'Could not load notes. Is the API running?';
+      }
+    }
+
+    load();
+    setInterval(load, 5000);
+  </script>
+</body>
+</html>
