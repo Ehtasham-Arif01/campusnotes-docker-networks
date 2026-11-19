@@ -1,0 +1,36 @@
+name: Compose CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Validate & build stack
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CampusNotes
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker-compose.yml
+        run: docker compose config -q
+      - name: Build all images
+        run: docker compose build
+      - name: Start stack and wait for healthchecks
+        run: docker compose up -d --wait --wait-timeout 120
+      - name: Smoke test
+        run: |
+          curl -fsS http://localhost:3000/health
+          curl -fsS http://localhost:3001/stats
+          curl -fsS -o /dev/null http://localhost:8080
+          curl -fsS -o /dev/null http://localhost:8081
+      - name: Verify MongoDB is not published
+        run: test -z "$(docker compose port mongo 27017 2>/dev/null)"
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

@@ -1,5 +1,11 @@
 # CampusNotes: Docker Network Isolation
 
+[![Compose CI](https://github.com/Ehtasham-Arif01/campusnotes-docker-networks/actions/workflows/compose-ci.yml/badge.svg)](https://github.com/Ehtasham-Arif01/campusnotes-docker-networks/actions/workflows/compose-ci.yml)
+![Docker](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)
+![nginx](https://img.shields.io/badge/nginx-009639?logo=nginx&logoColor=white)
+
 A small notes app split into five containers, built to show **network segmentation with Docker Compose**. The app has a public tier and a private tier. MongoDB sits on an `internal` network with no published ports. The only way to reach it is through the API, which is the one service attached to both networks.
 
 ![Architecture](screenshots/00_architecture_diagram.png)
