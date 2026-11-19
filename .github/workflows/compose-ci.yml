@@ -27,7 +27,10 @@ jobs:
           curl -fsS -o /dev/null http://localhost:8080
           curl -fsS -o /dev/null http://localhost:8081
       - name: Verify MongoDB is not published
-        run: test -z "$(docker compose port mongo 27017 2>/dev/null)"
+        run: |
+          published="$(docker port campus_mongo || true)"
+          echo "published ports: ${published:-<none>}"
+          test -z "$published"
       - name: Logs on failure
         if: failure()
         run: docker compose logs
